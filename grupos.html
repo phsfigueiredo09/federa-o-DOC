@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Federação DOC - Fase de Grupos</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+body{background:#0f0f0f;color:#fff;font-family:Orbitron;margin:0}
+header{background:#000;padding:20px;text-align:center;font-size:28px}
+nav{background:#1a1a1a;padding:10px;text-align:center}
+nav a{color:white;text-decoration:none;background:#2a2a2a;padding:10px 25px;border-radius:10px}
+table{width:95%;margin:15px auto;border-collapse:collapse;background:#1a1a1a}
+th,td{border:1px solid #333;padding:8px;text-align:center}
+th{background:#222}
+h2{text-align:center;margin-top:30px}
+input,button{padding:7px;border:none;border-radius:5px}
+button{background:#007bff;color:white;cursor:pointer}
+.remove{background:red}
+.timeCell{display:flex;align-items:center;gap:8px}
+.timeCell img{width:28px;height:28px;border-radius:50%}
+.adminBox{text-align:center;margin-top:15px}
+</style>
+</head>
+
+<body>
+
+<header>FASE DE GRUPOS - FEDERAÇÃO DOC 🐶🔥</header>
+
+<nav>
+<a href="home.html">Home</a>
+</nav>
+
+<div id="grupos"></div>
+
+<h2>🏆 CLASSIFICAÇÃO GERAL</h2>
+<div id="geral"></div>
+
+<h2>🔐 ADMIN</h2>
+
+<div class="adminBox">
+<input type="password" id="senha">
+<button onclick="login()">Entrar</button>
+</div>
+
+<div id="painel" class="adminBox" style="display:none">
+
+<h3>Adicionar Time</h3>
+<input id="nome" placeholder="Nome do Time">
+<input id="logo" placeholder="URL da Logo">
+<input id="grupo" placeholder="Grupo (A-D)">
+<button onclick="addTime()">Adicionar</button>
+
+<h3>Lançar Resultado</h3>
+<input id="time1" placeholder="Time Casa">
+<input id="gols1" type="number" placeholder="Gols">
+<input id="time2" placeholder="Time Fora">
+<input id="gols2" type="number" placeholder="Gols">
+<button onclick="lancar()">Salvar</button>
+
+</div>
+
+<script>
+
+const senha="docadmin";
+let admin=false;
+
+let dados=JSON.parse(localStorage.getItem("dados")) || {
+A:[],B:[],C:[],D:[]
+};
+
+function salvar(){
+localStorage.setItem("dados",JSON.stringify(dados));
+}
+
+function modelo(nome,logo){
+return {nome,logo,P:0,J:0,V:0,E:0,D:0,GP:0,GC:0};
+}
+
+function login(){
+if(document.getElementById("senha").value===senha){
+admin=true;
+document.getElementById("painel").style.display="block";
+render();
+}else alert("Senha incorreta");
+}
+
+function addTime(){
+let n=nome.value.trim();
+let l=logo.value.trim();
+let g=grupo.value.toUpperCase();
+if(!n||!g||!dados[g]) return alert("Dados inválidos");
+dados[g].push(modelo(n,l));
+salvar();
+render();
+}
+
+function remover(g,i){
+if(!admin) return;
+dados[g].splice(i,1);
+salvar();
+render();
+}
+
+function lancar(){
+let t1=time1.value,t2=time2.value;
+let g1=+gols1.value,g2=+gols2.value;
+let a,b;
+
+for(let g in dados){
+dados[g].forEach(t=>{
+if(t.nome==t1) a=t;
+if(t.nome==t2) b=t;
+});
+}
+
+if(!a||!b) return alert("Time não encontrado");
+
+a.J++; b.J++;
+a.GP+=g1; a.GC+=g2;
+b.GP+=g2; b.GC+=g1;
+
+if(g1>g2){a.V++;a.P+=3;b.D++}
+else if(g2>g1){b.V++;b.P+=3;a.D++}
+else{a.E++;b.E++;a.P++;b.P++}
+
+salvar();
+render();
+}
+
+function tabelaGrupo(g){
+let h=`<h2>Grupo ${g}</h2>
+<table>
+<tr><th>Time</th><th>P</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th></tr>`;
+dados[g].forEach((t,i)=>{
+h+=`<tr>
+<td class="timeCell">
+<img src="${t.logo||''}">
+${t.nome}
+${admin?`<button class="remove" onclick="remover('${g}',${i})">X</button>`:''}
+</td>
+<td>${t.P}</td><td>${t.J}</td><td>${t.V}</td><td>${t.E}</td><td>${t.D}</td><td>${t.GP}</td><td>${t.GC}</td>
+</tr>`;
+});
+h+="</table>";
+return h;
+}
+
+function tabelaGeral(){
+let todos=[];
+for(let g in dados){
+todos=todos.concat(dados[g]);
+}
+
+todos.sort((a,b)=>{
+if(b.P!=a.P) return b.P-a.P;
+if(b.V!=a.V) return b.V-a.V;
+let saldoB=(b.GP-b.GC);
+let saldoA=(a.GP-a.GC);
+if(saldoB!=saldoA) return saldoB-saldoA;
+return b.GP-a.GP;
+});
+
+let h=`<table>
+<tr>
+<th>Pos</th><th>Time</th><th>P</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th>
+</tr>`;
+
+todos.forEach((t,i)=>{
+h+=`<tr>
+<td>${i+1}º</td>
+<td class="timeCell"><img src="${t.logo||''}">${t.nome}</td>
+<td>${t.P}</td>
+<td>${t.J}</td>
+<td>${t.V}</td>
+<td>${t.E}</td>
+<td>${t.D}</td>
+<td>${t.GP}</td>
+<td>${t.GC}</td>
+<td>${t.GP-t.GC}</td>
+</tr>`;
+});
+
+h+="</table>";
+document.getElementById("geral").innerHTML=h;
+}
+
+function render(){
+let html="";
+for(let g in dados) html+=tabelaGrupo(g);
+document.getElementById("grupos").innerHTML=html;
+tabelaGeral();
+}
+
+render();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Tabela Geral - Federação DOC</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+body{background:#0f0f0f;color:#fff;font-family:Orbitron;margin:0}
+header{background:#000;padding:20px;text-align:center;font-size:28px}
+nav{background:#1a1a1a;padding:10px;text-align:center}
+nav a{color:white;text-decoration:none;background:#2a2a2a;padding:10px 25px;border-radius:10px}
+table{width:95%;margin:25px auto;border-collapse:collapse;background:#1a1a1a}
+th,td{border:1px solid #333;padding:8px;text-align:center}
+th{background:#222}
+.timeCell{display:flex;align-items:center;gap:8px;justify-content:center}
+.timeCell img{width:28px;height:28px;border-radius:50%}
+h2{text-align:center;margin-top:20px}
+</style>
+</head>
+
+<body>
+
+<header>TABELA GERAL - FEDERAÇÃO DOC 🏆</header>
+
+<nav>
+<a href="home.html">Home</a>
+<a href="grupos.html">Fase de Grupos</a>
+</nav>
+
+<h2>Classificação Geral</h2>
+
+<div id="tabela"></div>
+
+<script>
+
+// Lê exatamente os mesmos dados do grupos.html
+let dados = JSON.parse(localStorage.getItem("dados"));
+
+if(!dados){
+document.getElementById("tabela").innerHTML="<h2>Nenhum dado encontrado</h2>";
+}else{
+
+let todos=[];
+for(let g in dados){
+todos=todos.concat(dados[g]);
+}
+
+todos.sort((a,b)=>{
+if(b.P!=a.P) return b.P-a.P;
+if(b.V!=a.V) return b.V-a.V;
+let sgB=(b.GP-b.GC);
+let sgA=(a.GP-a.GC);
+if(sgB!=sgA) return sgB-sgA;
+return b.GP-a.GP;
+});
+
+let html=`<table>
+<tr>
+<th>Pos</th>
+<th>Time</th>
+<th>P</th>
+<th>J</th>
+<th>V</th>
+<th>E</th>
+<th>D</th>
+<th>GP</th>
+<th>GC</th>
+<th>SG</th>
+</tr>`;
+
+todos.forEach((t,i)=>{
+html+=`
+<tr>
+<td>${i+1}º</td>
+<td class="timeCell">
+<img src="${t.logo||''}">
+${t.nome}
+</td>
+<td>${t.P}</td>
+<td>${t.J}</td>
+<td>${t.V}</td>
+<td>${t.E}</td>
+<td>${t.D}</td>
+<td>${t.GP}</td>
+<td>${t.GC}</td>
+<td>${t.GP-t.GC}</td>
+</tr>
+`;
+});
+
+html+="</table>";
+
+document.getElementById("tabela").innerHTML=html;
+
+}
+
+</script>
+
+</body>
+</html>
